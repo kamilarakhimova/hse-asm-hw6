@@ -1,0 +1,404 @@
+\documentclass[a4paper,12pt,titlepage,finall]{article}
+
+\usepackage[T1,T2A]{fontenc}     % форматы шрифтов
+\usepackage[utf8x]{inputenc}     % кодировка символов, используемая в данном файле
+\usepackage[russian]{babel}      % пакет русификации
+\usepackage{tikz}                % для создания иллюстраций
+\usepackage{pgfplots}            % для вывода графиков функций
+\usepackage{geometry}		 % для настройки размера полей
+\usepackage{indentfirst}         % для отступа в первом абзаце секции
+\usepackage{pb-diagram}
+
+% выбираем размер листа А4, все поля ставим по 3см
+\geometry{a4paper,left=30mm,top=30mm,bottom=30mm,right=30mm}
+
+\setcounter{secnumdepth}{0}      % отключаем нумерацию секций
+
+\usepgfplotslibrary{fillbetween} % для изображения областей на графиках
+
+\begin{document}
+% Титульный лист
+\begin{titlepage}
+    \begin{center}
+	{\small \sc Национальный исследовательский университет\\
+	"Высшая школа экономики"\\}
+	\vfill
+	{\Large \sc Отчет по заданию №6}\\
+	~\\
+	{\large \bf <<Сборка многомодульных программ. \\
+	Вычисление корней уравнений и определенных интегралов.>>}\\ 
+	~\\
+	{\large \bf Вариант 1 / 3 / 2}
+    \end{center}
+    \begin{flushright}
+	\vfill {Выполнила:\\
+	студентка 211 группы\\
+	Рахимова~К.~М.\\
+	~\\
+	Преподаватель:\\
+	Дудина~И.~А.}
+    \end{flushright}
+    \begin{center}
+	\vfill
+	{\small Москва\\2022}
+    \end{center}
+\end{titlepage}
+
+% Автоматически генерируем оглавление на отдельной странице
+\tableofcontents
+\newpage
+
+\section{1. Постановка задачи}
+
+Требуется реализовать численный метод, позволяющий вычислять площадь плоской фигуры, ограниченной тремя кривыми $f_{1} = 2^x + 1$, $f_{2} = x^5$, $f_{3} = \frac{1-x}{3}$ c заданной абсолютной точностью $\varepsilon$ = 0.001 с помощью квадратурной формулы трапеций. Абсциссы вершин фигуры необходимо искать методом касательных (Ньютона). Отрезок для применения метода нахождения корней должен быть вычислен аналитически.
+
+\newpage
+
+\section{2. Математическое обоснование}
+В данном разделе проведён анализ заданного набора кривых $f_{1} = 2^x + 1$, $f_{2} = x^5$, $f_{3} = \frac{1-x}{3}$, обоснован выбор отрезков для поиска точек пересечения кривых, а также значений $\varepsilon_1$ и $\varepsilon_2$. Приведены графики заданных функций.
+\newline
+
+Для поиска точек пересечения с помощью метода касательных на корректно определённом отрезке [a, b] для каждой пары функций f(x) и g(x) необходимо рассмотреть функцию F(x) = f(x) − g(x), имеющую ровно 1 корень на [a, b] (достаточно соблюдение следующих условий: F(x) имеет разные знаки на концах отрезка, а её первая и вторая производные не меняют знаки на отрезке [a, b]). Более подробную информацию о методе касательных можно узнать из книги [1].
+
+{Выбор отрезков для поиска точек пересечения кривых:}
+\begin{itemize}
+\item функции $f_1$ и $f_2$ пересекаются в точке х = 1.2793 (выч. аналитически), выбираем отрезок [1.0, 2.0]\\
+$F_1_2(x) = f_1(x) - f_2(x) = 2^x + 1 - x^5$ \\
+$F_1_2(1.0) = 2.0 > 0$, $F_1_2(2.0) = -27.0 < 0$ \\
+$F_1_2'(x) = 2^xln(2) - 5x^4 < 0$ на отрезке [1.0, 2.0]\\
+$F_1_2''(x) = 2^xln(2)^2 - 20x^3 < 0$ на отрезке [1.0, 2.0]\\
+Выбор отрезков корректен.
+\item функции $f_1$ и $f_3$ пересекаются в точке х = -2.5222 (выч. аналитически), выбираем отрезок [-3.0, -1.0]\\
+$F_1_3(x) = f_1(x) - f_3(x) = 2^x + 1 - \frac{1-x}{3}$ \\
+$F_1_3(-3.0) = -0.2083 < 0$, $F_1_3(-1.0) = 0.83 > 0$ \\
+$F_1_3'(x) = 2^xln(2) + \frac{1}{3} > 0$ на отрезке [-3.0, -1.0]\\
+$F_1_3''(x) = 2^xln(2)^2 > 0$ на отрезке [-3.0, -1.0]\\
+Выбор отрезков корректен.
+\item функции $f_2$ и $f_3$ пересекаются в точке х = 0.6505 (выч. аналитически), выбираем отрезок [0.65, 1.0]\\
+$F_2_3(x) = f_2(x) - f_3(x) = x^5 - \frac{1-x}{3}$ \\
+$F_2_3(0.65) = -0.0006 < 0$, $F_2_3(1.0) = 1.0 > 0$ \\
+$F_2_3'(x) = 5x^4 + \frac{1}{3} > 0$ на отрезке [0.65, 1.0]\\
+$F_2_3''(x) = 20x^3 > 0$ на отрезке [0.65, 1.0]\\
+Выбор отрезков корректен.
+\end{itemize}
+
+\newline
+Величины $\varepsilon_1$ и $\varepsilon_2$, являющиеся соответственно погрешностью вычисления абсциссы точек пересечения кривых и погрешностью вычисления интегралов, использующихся при вычислении площади плоской фигуры, необходимо подобрать вручную так, чтобы гарантировалось вычисление площади фигуры с точностью $\varepsilon$ = 0.001.
+
+{Выбор $\varepsilon_1$  и $\varepsilon_2$:} 
+
+Возьмём точки $x_i - \varepsilon_1$ и $x_i + \varepsilon_1$, где $x_i$ - точки пересечения кривых $f_{1}$ и $f_{2}$, $f_{1}$ и $f_{3}$, $f_{2}$ и $f_{3}$. Получается, приближённое значение корней лежит в промежутке [$x_i - \varepsilon_1$, $x_i + \varepsilon_1$]. Тогда максимальное значение каждой функции при выбранных промежутках $y_i = max(f_i(x_i - \varepsilon_1), f_i(x_i + \varepsilon_1))$, для всех функций $Y = max(y_1, y_2, y_3)$. Пусть S - точное значение площади, а $S_e$ - приближённое. Площадь фигуры вычисляется по значениям 3-ёх интегралов. Значит, $|S_e - S| >= 2*M*\varepsilon_1 + 3*\varepsilon_2$, где Y = 3.5 приблизительно. Итого: $\varepsilon >= 2*Y*\varepsilon_1 + 3*\varepsilon_2$. Возьмём $\varepsilon_1$ = 0.0001 и $\varepsilon_2$ = 0.0001, значения удовлетворяют условию 0.001 > 7*0.0001 + 3*0.0001.
+
+
+Заданные функции изображены ниже:
+%дальше график рисуем
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[% grid=both,                % рисуем координатную сетку (если нужно)
+             axis lines=middle,          % рисуем оси координат в привычном для математики месте
+             restrict x to domain=-3:2,  % задаем диапазон значений переменной x
+             restrict y to domain=-2:4,  % задаем диапазон значений функции y(x)
+             axis equal,                 % требуем соблюдения пропорций по осям x и y
+             enlargelimits,              % разрешаем при необходимости увеличивать диапазоны переменных
+             legend cell align=left,     % задаем выравнивание в рамке обозначений
+             scale=2,                    % задаем масштаб 2:1
+             xticklabels={,,},           % убираем нумерацию с оси x
+             yticklabels={,,}]           % убираем нумерацию с оси y
+
+% первая функция
+% параметр samples отвечает за качество прорисовки
+\addplot[green,domain=-3:2, samples=256,thick,name path=A] {2^x+1};
+% описание первой функции
+\addlegendentry{$y=2^x+1$}
+
+% вторая функция
+% здесь необходимо дополнительно ограничить диапазон значений переменной x
+\addplot[blue,domain=-3:2,samples=256,thick,name path=B] {x^5};
+\addlegendentry{$y=x^5$}
+
+% дополнительное пустое место не требуется, так как формулы имеют небольшой размер по высоте
+
+% третья функция
+\addplot[red,domain=-3:2, samples=256,thick,name path=C] {(1-x)/3};
+\addlegendentry{$y=\frac{1-x}{3}$}
+
+% добавим немного пустого места между описанием первой и второй функций
+\addlegendimage{empty legend}\addlegendentry{}
+
+% Поскольку автоматическое вычисление точек пересечения кривых в TiKZ реализовать сложно,
+% будем явно задавать координаты.
+\addplot[dashed] coordinates { (1.27, 3.42) (1.27, 0) };
+\addplot[color=black] coordinates {(1.27, 0)} node [label={-10:{\small 1.27}}]{};
+
+\addplot[dashed] coordinates { (0.6505, 0.1164) (0.6505, 0) };
+\addplot[color=black] coordinates {(0.6505, 0)} node [label={-10:{\small 0.65}}]{};
+
+\addplot[dashed] coordinates { (-2.5222, 1.1740) (-2.5222, 0) };
+\addplot[color=black] coordinates {(-2.5222, 0)} node [label={-10:{\small -2.52}}]{};
+
+\end{axis}
+\end{tikzpicture}
+\caption{Плоская фигура, ограниченная графиками заданных уравнений}
+\label{plot2}
+\end{figure}
+
+\newpage
+\section{3. Результаты экспериментов}
+Результаты проведенных вычислений приведены ниже.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{c c c}
+\hline
+Кривые & $x$ & $y$ \\
+\hline
+$f_{1}$ и $f_{2}$ &  1.27935 & 3.42729 \\
+$f_{2}$ и $f_{3}$ &  0.65051 & 0.11648\\
+$f_{1}$ и $f_{3}$ & -2.52222 & 1.17407\\
+\hline 
+\end{tabular}
+\caption{Координаты точек пересечения}
+\label{table1}
+\end{table}
+
+Результаты проиллюстрированы графиком.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[% grid=both,                % рисуем координатную сетку (если нужно)
+             axis lines=middle,          % рисуем оси координат в привычном для математики месте
+             restrict x to domain=-3:2,  % задаем диапазон значений переменной x
+             restrict y to domain=-2:4,  % задаем диапазон значений функции y(x)
+             axis equal,                 % требуем соблюдения пропорций по осям x и y
+             enlargelimits,              % разрешаем при необходимости увеличивать диапазоны переменных
+             legend cell align=left,     % задаем выравнивание в рамке обозначений
+             scale=2,                    % задаем масштаб 2:1
+             xticklabels={,,},           % убираем нумерацию с оси x
+             yticklabels={,,}]           % убираем нумерацию с оси y
+
+% первая функция
+% параметр samples отвечает за качество прорисовки
+\addplot[green,domain=-3:2, samples=256,thick,name path=A] {2^x+1};
+% описание первой функции
+\addlegendentry{$y=2^x+1$}
+
+% вторая функция
+% здесь необходимо дополнительно ограничить диапазон значений переменной x
+\addplot[blue,domain=-3:2,samples=256,thick,name path=B] {x^5};
+\addlegendentry{$y=x^5$}
+
+% дополнительное пустое место не требуется, так как формулы имеют небольшой размер по высоте
+
+% третья функция
+\addplot[red,domain=-3:2, samples=256,thick,name path=C] {(1-x)/3};
+\addlegendentry{$y=\frac{1-x}{3}$}
+
+% добавим немного пустого места между описанием первой и второй функций
+\addlegendimage{empty legend}\addlegendentry{}
+
+
+% закрашиваем фигуру
+\addplot[blue!20,samples=256] fill between[of=C and A,soft clip={domain=-2.5222:0.6505}];
+\addplot[blue!20,samples=256] fill between[of=A and B,soft clip={domain=0.6505:1.2793}];
+\addlegendentry{$S=4.289$}
+
+% Поскольку автоматическое вычисление точек пересечения кривых в TiKZ реализовать сложно,
+% будем явно задавать координаты.
+\addplot[dashed] coordinates { (1.27, 3.42) (1.27, 0) };
+\addplot[color=black] coordinates {(1.27, 0)} node [label={-10:{\small 1.27}}]{};
+
+\addplot[dashed] coordinates { (0.6505, 0.1164) (0.6505, 0) };
+\addplot[color=black] coordinates {(0.6505, 0)} node [label={-10:{\small 0.65}}]{};
+
+\addplot[dashed] coordinates { (-2.5222, 1.1740) (-2.5222, 0) };
+\addplot[color=black] coordinates {(-2.5222, 0)} node [label={-10:{\small -2.52}}]{};
+
+\end{axis}
+\end{tikzpicture}
+\caption{Плоская фигура, ограниченная графиками заданных уравнений}
+\label{plot2}
+\end{figure}
+
+\newpage
+
+\section{4. Структура программы и спецификация функций}
+В данном разделе приведён полный список модулей и функций, описана их функциональность.
+\newline
+
+\item{Модуль {\bf \ttfamily hw6.asm}}
+
+Состоит из 3-ёх функций, возвращающих значения 3-ёх кривых, определяемых вариантом задания: $f_{1} = 2^x + 1$, $f_{2} = x^5$, $f_{3} = \frac{1-x}{3}$ и 3-ёх функций, возвращающих значения производных 3-ёх кривых, описанных выше: $f_{1}' = ln(2)2^x$, $f_{2}' = 5x^4$, $f_{3}' = -\frac{1}{3}$.
+\begin{itemize}
+    \item {\bf \ttfamily double f1(double x)} возвращает значение $f_{1} = 2^x + 1$
+    \item {\bf \ttfamily double f2(double x)} возвращает значение $f_{2} = x^5$
+    \item {\bf \ttfamily double f3(double x)} возвращает значение $f_{3} = \frac{1-x}{3}$
+    \item {\bf \ttfamily double f1\_diff(double x)} возвращает значение $f_{1}' = ln(2)2^x$
+    \item {\bf \ttfamily double f2\_diff(double x)} возвращает значение $f_{2}' = 5x^4$
+    \item {\bf \ttfamily double f3\_diff(double x)} возвращает значение $f_{3}' = -\frac{1}{3}$
+\end{itemize}
+\item{Модуль {\bf \ttfamily integral.с}}
+
+Состоит из 3-ёх функций: {\bf \ttfamily root}, {\bf \ttfamily integral} и главной {\bf \ttfamily main}. Первые две являются скорее вспомогательными для проведения вычислений и нахождения нужных значений в последней.
+\begin{itemize}
+\item {\bf \ttfamily double root(afunc *f, afunc *g, double a, double b, double eps1,  afunc *f\_diff, afunc *g\_diff)} вычисляет c точностью $\varepsilon_1$ корень $x$ уравнения $f(x) = g(x)$ на отрезке [a,b], используя метод касательных (Ньютона), а также вычисляет количество необходимых для нахождения корня итераций
+\item {\bf \ttfamily double integral(afunc *f, double a, double b, double eps2))} вычисляет с точностью $\varepsilon_2$ величину определенного интеграла от функции $f(x)$ на отрезке [a,b], используя метод трапеций
+\item {\bf \ttfamily int main(int argc, char* argv[])} вызывает необходимые функции, а также выполняет требуемые действия в зависимости от значения принимаемых ключей командной строки
+\end{itemize}
+\newline
+\bigskip
+
+\item{Ниже изображено графическое разбиение программы на компоненты и связи между этими компонентами:}
+
+
+\[ \begin{diagram}
+   \node{hw6.asm}\arrow[2]{t,e}
+   \node[2]{integral.c}\\\\\\
+\end{diagram}\] 
+
+
+\newpage
+
+\section{5. Сборка программы (Make-файл)}
+
+Далее приведён текст Make-файла.
+\newline
+
+{\usefont{T2A}{cmtt}{m}{n}
+AS=nasm
+
+ASMFLAGS+=-g -f elf32
+
+CFLAGS ?= -O2 -g
+
+CFLAGS += -std=gnu99
+
+CFLAGS += -Wall -Werror -Wformat-security -Wignored-qualifiers 
+
+\ \ \ \ \ \ \ \ -Winit-self -Wswitch-default -Wpointer-arith -Wtype-limits 
+	
+\ \ \ \ \ \ \ \ -Wempty-body -Wstrict-prototypes -Wold-style-declaration 
+	
+\ \ \ \ \ \ \ \ -Wold-style-definition -Wmissing-parameter-type 
+	
+\ \ \ \ \ \ \ \ -Wmissing-field-initializers -Wnested-externs -Wstack-usage=4096
+
+\ \ \ \ \ \ \ \ -Wmissing-prototypes -Wfloat-equal -Wabsolute-value
+
+CFLAGS += -fsanitize=undefined -fsanitize-undefined-trap-on-error
+
+CC += -m32 -no-pie -fno-pie
+
+\bigskip
+.PHONY: all
+
+\bigskip
+all: integral
+
+\bigskip
+integral: integral.o hw6.o
+
+\ \ \ \ \ \ \ \ \$(CC) \$(CFLAGS) \$\^ \ \--o \$@ 
+
+\bigskip
+integral.o: integral.c
+
+\ \ \ \ \ \ \ \ \$(CC) \$(CFLAGS) \$\^ \ \--c \--o \$@
+
+\bigskip
+hw6.o: hw6.asm
+
+\ \ \ \ \ \ \ \ \$(AS) \$(ASMFLAGS) \$\^ \ \--o \$@
+
+\bigskip
+clean:
+
+\ \ \ \ \ \ \ \ rm -rf *.o integral
+
+\bigskip
+
+test: integral
+
+\ \ \ \ \ \ \ \ ./integral --test-root 1:2:1.0:2.0:0.0001:1.279353
+	
+\ \ \ \ \ \ \ \ ./integral --test-root 1:3:-3.0:-1.0:0.0001:-2.522223
+	
+\ \ \ \ \ \ \ \ ./integral --test-root 2:3:0.65049:1.0:0.0001:0.650519
+	
+\ \ \ \ \ \ \ \ ./integral --test-integral 1:-2.522223:1.279353:0.0001:7.05229
+	
+\ \ \ \ \ \ \ \ ./integral --test-integral 2:0.650519:1.279353:0.0001:0.718157
+	
+\ \ \ \ \ \ \ \ ./integral --test-integral 3:-2.522223:0.650519:0.0001:2.04732
+}
+
+\bigskip
+Зависимости между модулями программы описаны диаграммой.
+
+\bigskip
+\[ \begin{diagram}
+   \node{hw6.asm}\arrow[2]{t,e}
+   \node[2]{hw6.o}\arrow[2]{se,b}\\\\\\
+   \node{integral.c}\arrow[2]{t,e}
+   \node[2]{integral.o}\arrow[2]{t,e}
+   \node[2]{integral}\\
+\end{diagram}\]               
+\newpage
+
+\section{6. Отладка программы, тестирование функций}
+Тестирование и отладка численных методов производились на функциях $f_4 = x^3 + 5x^2 - 6$, $f_5 = \frac{7}{x-5} + 1$ и $f_6 = ln(x)$ с использованием их производных $f_4' = 3x^2 + 10x$, $f_5' = -\frac{7}{(x-5)^2}$ и $f_6' = \frac{1}{x}$.
+\newline
+
+{Тестирование функции {\bf \ttfamily root}:}
+\begin{itemize}
+\item функции $f_4$ и $f_5$ пересекаются в точке х = -1.2527 (выч. аналитически)\\
+$F_4_5(x) = f_4(x) - f_5(x) = x^3 + 5x^2 - 6 - \frac{7}{x-5} - 1$ \\
+$F_4_5(-1.5) = 1.9519 > 0$, $F_4_5(-1) = -1.8333 < 0$ \\
+$F_4_5'(x) = 3x^2 + 10x + \frac{7}{(x-5)^2} < 0$ на отрезке [-1.5, -1]\\
+$F_4_5''(x) = 6x + 10 - \frac{14}{(x-5)^3} > 0$ на отрезке [-1.5, -1]\\
+$x_4$ = {\bf \ttfamily root(f4, f5, -1.5, -1, eps1, f4\_diff, f5\_diff)} = -1.252701 \\
+Функция работает корректно.
+\item функции $f_5$ и $f_6$ пересекаются в точке х = 0.5615 (выч. аналитически)\\
+$F_5_6(x) = f_5(x) - f_6(x) = \frac{7}{x-5} + 1 - ln(x)$ \\
+$F_5_6(0.3) = 0.7146 > 0$, $F_5_6(1) = -0.75 < 0$ \\
+$F_5_6'(x) = -\frac{7}{(x-5)^2} - \frac{1}{x} < 0$ на отрезке [0.3, 1]\\
+$F_5_6''(x) = 6x + 10 - \frac{14}{(x-5)^3} > 0$ на отрезке [0.3, 1]\\
+$x_5$ = {\bf \ttfamily root(f5, f6, 0.3, 1, eps1, f5\_diff, f6\_diff)} = 0.561516 \\
+Функция работает корректно.
+\item функции $f_4$ и $f_6$ пересекаются в точке х = 1.0 (выч. аналитически)\\
+$F_4_6(x) = f_4(x) - f_6(x) = x^3 + 5x^2 - 6 - ln(x)$ \\
+$F_4_6(0.5) = -3.9318 < 0$, $F_4_6(1.5) = 8.2195 > 0$ \\
+$F_4_6'(x) = \frac{3x^3 + 10x^2 - 1}{x} > 0$ на отрезке [0.5, 1.5]\\
+$F_4_6''(x) = 6x + 10 + \frac{1}{x^2} > 0$ на отрезке [0.5, 1.5]\\
+$x_6$ = {\bf \ttfamily root(f4, f6, 0.5, 1.5, eps1, f4\_diff, f6\_diff)} = 1.000000 \\
+Функция работает корректно.
+\end{itemize}
+
+{Тестирование функции {\bf \ttfamily integral}:}
+\begin{itemize}
+\item $\int_{x_4}^{x_6}(f_4(x))dx = $\int_{-1.2527}^{1}(x^3 + 5x^2 - 6)dx$ = -8.93883 (выч. аналитически) \\
+$s_4$ = {\bf \ttfamily integral(f4, x4, x6, eps2)} = -8.938819 \\
+Функция работает корректно.
+\item $\int_{x_4}^{x_5}(f_5(x))dx = $\int_{-1.2527}^{0.5615}(\frac{7}{x-5} + 1)dx$ = -0.58467 (выч. аналитически) \\
+$s_5$ = {\bf \ttfamily integral(f5, x4, x5, eps2)} = -0.584679 \\
+Функция работает корректно.
+\item $\int_{x_5}^{x_6}(f_6(x))dx = $\int_{0.5615}^{1}(ln(x))dx$ = -0.11443 (выч. аналитически) \\
+$s_6$ = {\bf \ttfamily integral(f6, x5, x6, eps2)} = -0.114411 \\
+Функция работает корректно.
+\end{itemize}
+\newpage
+
+\section{7. Анализ допущенных ошибок}
+
+\newpage
+\begin{raggedright}
+\addcontentsline{toc}{section}{Список цитируемой литературы}
+\begin{thebibliography}{99}
+\bibitem{math} Ильин~В.\,А., Садовничий~В.\,А., Сендов~Бл.\,Х. Математический анализ. Т.\,1~---
+    Москва: Наука, 1985.
+\end{thebibliography}
+\end{raggedright}
+
+\end{document}
